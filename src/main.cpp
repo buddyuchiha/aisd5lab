@@ -11,7 +11,7 @@ private:
 		T _value;
 		bool _filled;
 		HashPair(K key, T value) : _key(key), _value(value), _filled(false) {}
-		HashPair(): _key(K()), _value(T()), _filled(false){}
+		HashPair(): _key(K()), _value(T()), _filled(false) {}
 	};
 	vector<HashPair<K, T>> _data;
 	int _capacity;
@@ -37,16 +37,21 @@ HashTable<K, T>::HashTable(int capacity) : _capacity(capacity)
 template<typename K, typename T>
 HashTable<K, T>::~HashTable()
 {
+	_data.clear();
+	_capacity = 0;
 }
 
 template<typename K, typename T>
-HashTable<K, T>::HashTable(const HashTable& other)
+HashTable<K, T>::HashTable(const HashTable& other) : _data(other._data), _capacity(other._capacity)
 {
 }
 
 template<typename K, typename T>
 void HashTable<K, T>::print()
 {
+	for (int i = 0, i < _data.size(), i++) {
+		cout << Key: << _data[i]._key << 
+	}
 }
 
 template<typename K, typename T>
