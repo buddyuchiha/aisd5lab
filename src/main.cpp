@@ -16,17 +16,17 @@ private:
 		HashPair() : _key(K()), _value(T()), _filled(false), _next(nullptr) {}
 	};
 	vector<HashPair<K, T>> _data;
-	size_t _capacity;
+	size_t _capacity = 0;
+	size_t _size;
 	size_t hash_function(K key) {
-		size_t a = 333333333333333;
-		size_t w = sizeof(size_t) * 8;
-		size_t l = log2(_capacity);
-		size_t result = ((key * a) % static_cast<size_t>(pow(2, w))) >> (w - l);
-		cout << "Capacity: " << _capacity << endl;
+		size_t a = 333333333;
+		size_t w = static_cast<size_t>(sizeof(int)) * 8;
+		size_t l = log2(_data.size());
+		size_t result = ((key * 333333333) % static_cast<size_t>(pow(2, w))) >> (w - l);
 		return result;
 	}
 public:
-	HashTable(int capacity);
+	HashTable(int size);
 	~HashTable();  
 	HashTable(const HashTable& other);
 	void print();
@@ -36,12 +36,13 @@ public:
 	T* search(K key);
 	bool erase(K key);
 	int count(K key);
+	HashTable<K, T>&operator=(const HashTable<K, T>& other);
 };
 
 template<typename K, typename T>
-HashTable<K, T>::HashTable(int capacity) : _capacity(capacity)
+HashTable<K, T>::HashTable(int size) : _size(size)
 {
-	_data.resize(_capacity);
+	_data.resize(_size);
 }
 
 template<typename K, typename T>
@@ -49,10 +50,11 @@ HashTable<K, T>::~HashTable()
 {
 	_data.clear();
 	_capacity = 0;
+	_size = 0;
 }
 
 template<typename K, typename T>
-HashTable<K, T>::HashTable(const HashTable& other) : _data(other._data), _capacity(other._capacity)
+HashTable<K, T>::HashTable(const HashTable& other) : _data(other._data), _size(other._size)
 {
 
 }
@@ -93,13 +95,31 @@ void HashTable<K, T>::insert(K key, T value)
 }
 
 template<typename K, typename T>
-void HashTable<K, T>::insert_or_assign(K key, T value)
-{
+void HashTable<K, T>::insert_or_assign(K key, T value) {
+	size_t index = hash_function(key);
+	HashPair<K, T>* temp = &_data[index];
+	while (temp) {
+		if (temp->_key == key) {
+			temp->_value = value;
+			return;
+		}
+		temp = temp->_next;
+	}
+	insert(key, value);
 }
 
+
 template<typename K, typename T>
-bool HashTable<K, T>::contains(T value)
-{
+bool HashTable<K, T>::contains(T value) {
+	for (const auto& pair : _data) {
+		HashPair<K, T>* temp = &pair;
+		while (temp) {
+			if (temp->_value == value) {
+				return true;
+			}
+			temp = temp->_next;
+		}
+	}
 	return false;
 }
 
@@ -113,8 +133,8 @@ T* HashTable<K, T>::search(K key)
 	else {
 		HashPair<K, T>* temp = &_data[index];
 		while (temp) {
-			if (_data[index]._key == key) {
-				return &_data[index]._value;
+			if (temp->_key == key) {
+				return &temp->_value;
 			}
 			temp = temp->_next;
 		}
@@ -123,29 +143,85 @@ T* HashTable<K, T>::search(K key)
 }
 
 template<typename K, typename T>
-bool HashTable<K, T>::erase(K key)
-{
+bool HashTable<K, T>::erase(K key) {
+	size_t index = hash_function(key);
+	HashPair<K, T>* current = &_data[index];
+	HashPair<K, T>* prev = nullptr;
+	while (current) {
+		if (current->_key == key) {
+			if (prev) {
+				prev->_next = current->_next;
+				delete current;
+			}
+			else {
+				if (current->_next) {
+					_data[index] = *current->_next;
+					delete current->_next; 
+				}
+				else {
+					_data[index] = HashPair<K, T>();
+				}
+			}
+			return true;
+		}
+		prev = current;
+		current = current->_next;
+	}
 	return false;
 }
 
+
 template<typename K, typename T>
-int HashTable<K, T>::count(K key)
-{
-	return 0;
+int HashTable<K, T>::count(K key) {
+	size_t index = hash_function(key);
+	int count = 0;
+	HashPair<K, T>* current = &_data[index];
+	while (current) {
+		if (current->_key == key) {
+			count++;
+		}
+		current = current->_next;
+	}
+	return count;
+}
+
+template<typename K, typename T>
+HashTable<K, T>& HashTable<K, T>::operator=(const HashTable<K, T>& other) {
+	if (this == &other) {
+		return *this;
+	}
+	_data.clear();
+	_capacity = 0;
+	_data = other._data;
+	_capacity = other._capacity;
+	return *this;
 }
 
 int main() {
-	HashTable<int, string> table(5);
+	HashTable<int, int> table(10);
 
-	table.insert(1, "one");
-	table.insert(228, "two");
-	table.insert(1000000, "three");
-	table.insert(153216, "four");
-	table.insert(550000, "five");
-	table.insert(153215, "dont know");
+	table.insert(1, 1337);
+	table.insert(2, 1337);
+	table.insert(3, 1337);
+	table.insert(4, 1337);
+	table.insert(5, 1337);
+	table.insert(6, 1337);
+	table.insert(7, 1337);
+	table.insert(8, 1337);
+	table.insert(9, 1337);
+	table.insert(10, 1337);
 
-	cout << "HashTable after insertions:" << endl;
+	/*cout << "HashTable after insertions:" << endl;
 	table.print();
+	table.erase(2);
+	table.print();
+	if (table.search(10)) { cout << "Yes" << endl; }
+	else { cout << "No" << endl; }
 
-	return 0;
+	HashTable<int, int>table2(table);
+	table2.print();*/
+
+	HashTable<int, int> table2(6);
+	table2 = table;
+	table2.print();
 }
