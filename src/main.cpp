@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include<random>
 using namespace std;
 
 template <typename K, typename T>
@@ -16,7 +17,7 @@ private:
 		HashPair() : _key(K()), _value(T()), _filled(false), _next(nullptr) {}
 	};
 	vector<HashPair<K, T>> _data;
-	size_t _capacity = 0;
+	int _count = 0;
 	size_t _size;
 	size_t hash_function(K key) {
 		size_t a = 333333333;
@@ -25,10 +26,17 @@ private:
 		size_t result = ((key * 333333333) % static_cast<size_t>(pow(2, w))) >> (w - l);
 		return result;
 	}
+	int random(int a, int b) {
+			random_device random_device;
+			mt19937 generator(random_device());
+			uniform_int_distribution<> distribution(a, b);
+			return distribution(generator);
+	}
 public:
 	HashTable(int size);
 	~HashTable();  
 	HashTable(const HashTable& other);
+	HashTable(int size, int min_key, int max_key, int min_value, int max_value);
 	void print();
 	void insert(K key, T value);
 	void insert_or_assign(K key, T value);
@@ -37,6 +45,8 @@ public:
 	bool erase(K key);
 	int count(K key);
 	HashTable<K, T>&operator=(const HashTable<K, T>& other);
+	int get_count();
+	int get_size();
 };
 
 template<typename K, typename T>
@@ -49,16 +59,28 @@ template<typename K, typename T>
 HashTable<K, T>::~HashTable()
 {
 	_data.clear();
-	_capacity = 0;
+	_count = 0;
 	_size = 0;
 }
 
 template<typename K, typename T>
-HashTable<K, T>::HashTable(const HashTable& other) : _data(other._data), _size(other._size)
+HashTable<K, T>::HashTable(const HashTable& other) : _data(other._data), _size(other._size), _count(other._count)
 {
-
 }
 
+template<typename K, typename T>
+HashTable<K, T>::HashTable(int size, int min_key, int max_key, int min_value, int max_value) : _size(size)
+{
+	_data.resize(_size);
+	for (int i = 0; i < _size; ++i) {
+		int num_elements = random(1, 10); 
+		for (int j = 0; j < num_elements; ++j) {
+			K key = random(min_key, max_key);
+			T value = random(min_value, max_value);
+			insert(key, value);
+		}
+	}
+}
 template<typename K, typename T>
 void HashTable<K, T>::print()
 {
@@ -71,7 +93,7 @@ void HashTable<K, T>::print()
 		}
 		cout << endl;
 	}
-	cout << "Capacity: " << _capacity << endl;
+	cout << "Kolizii: " << _count << endl;
 }
 
 template<typename K, typename T>
@@ -84,13 +106,12 @@ void HashTable<K, T>::insert(K key, T value)
 			temp = temp->_next;
 		}
 		temp->_next = new HashPair<K, T>(key, value);
+		_count++;
 	}
 	else {
 		_data[index] = HashPair<K, T>(key, value);
 		_data[index]._filled = true;
 	}
-	_capacity++;
-	cout << hash_function(key) << endl;
 
 }
 
@@ -191,14 +212,27 @@ HashTable<K, T>& HashTable<K, T>::operator=(const HashTable<K, T>& other) {
 		return *this;
 	}
 	_data.clear();
-	_capacity = 0;
+	_count= other._count;
 	_data = other._data;
-	_capacity = other._capacity;
 	return *this;
 }
 
+template<typename K, typename T>
+int HashTable<K, T>::get_count()
+{
+	return _count;
+}
+
+template<typename K, typename T>
+int HashTable<K, T>::get_size()
+{
+	return _data.size();
+}
+
+
+
 int main() {
-	HashTable<int, int> table(10);
+	/*HashTable<int, int> table(10);
 
 	table.insert(1, 1337);
 	table.insert(2, 1337);
@@ -210,6 +244,14 @@ int main() {
 	table.insert(8, 1337);
 	table.insert(9, 1337);
 	table.insert(10, 1337);
+	table.insert(11, 1337);
+	table.insert(12, 1337);
+	table.insert(13, 1337);
+	table.insert(14, 1337);
+	table.insert(15, 1337);
+	table.insert(16, 1337);
+	table.insert(17, 1337);
+	table.insert(1000, 1337);*/
 
 	/*cout << "HashTable after insertions:" << endl;
 	table.print();
@@ -221,7 +263,12 @@ int main() {
 	HashTable<int, int>table2(table);
 	table2.print();*/
 
-	HashTable<int, int> table2(6);
+	/*HashTable<int, int> table2(6);
 	table2 = table;
-	table2.print();
+	table2.print();*/
+	
+	HashTable<int, int> table(10, 1, 100, 1000, 9999);
+	cout << "HashTable after random insertions:" << endl;
+	table.print();
+
 }
