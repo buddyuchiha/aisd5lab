@@ -25,10 +25,10 @@ namespace algorithm {
 		int _count = 0;
 		size_t _size;
 		size_t hash_function(K key) {
-			size_t a = 333333333;
-			size_t w = static_cast<size_t>(sizeof(int)) * 8;
+			size_t a = 2654435761;
+			size_t w = sizeof(int) * 8.0;
 			size_t l = log2(_data.size());
-			size_t result = ((key * 333333333) % static_cast<size_t>(pow(2, w))) >> (w - l);
+			size_t result = ((key * a) % static_cast<size_t>(pow(2, w))) >> (w - l);
 			return result;
 		}
 		int random(int a, int b) {
@@ -77,13 +77,10 @@ namespace algorithm {
 	HashTable<K, T>::HashTable(int size, int min_key, int max_key, int min_value, int max_value) : _size(size)
 	{
 		_data.resize(_size);
-		for (int i = 0; i < _size; ++i) {
-			int num_elements = random(1, 10);
-			for (int j = 0; j < num_elements; ++j) {
-				K key = random(min_key, max_key);
-				T value = random(min_value, max_value);
-				insert(key, value);
-			}
+		for (int i = 0; i < 25; ++i) {
+			K key = random(min_key, max_key);
+			T value = random(min_value, max_value);
+			insert(key, value);
 		}
 	}
 	template<typename K, typename T>
@@ -98,7 +95,6 @@ namespace algorithm {
 			}
 			cout << endl;
 		}
-		cout << "Kolizii: " << _count << endl;
 	}
 
 	template<typename K, typename T>
@@ -106,12 +102,12 @@ namespace algorithm {
 	{
 		size_t index = hash_function(key);
 		HashPair<K, T>* temp = &_data[index];
-		if (_data[index]._filled) {
+		if (temp ->_filled) {
 			while (temp->_next) {
 				temp = temp->_next;
 			}
 			temp->_next = new HashPair<K, T>(key, value);
-			_count++;
+			temp->_next->_filled = true;
 		}
 		else {
 			_data[index] = HashPair<K, T>(key, value);
@@ -137,7 +133,7 @@ namespace algorithm {
 
 	template<typename K, typename T>
 	bool HashTable<K, T>::contains(T value) {
-		for (const auto& pair : _data) {
+		for (auto& pair : _data) {
 			HashPair<K, T>* temp = &pair;
 			while (temp) {
 				if (temp->_value == value) {
@@ -203,9 +199,7 @@ namespace algorithm {
 		int count = 0;
 		HashPair<K, T>* current = &_data[index];
 		while (current) {
-			if (current->_key == key) {
-				count++;
-			}
+			count++;
 			current = current->_next;
 		}
 		return count;
@@ -223,9 +217,14 @@ namespace algorithm {
 	}
 
 	template<typename K, typename T>
-	int HashTable<K, T>::get_count()
-	{
-		return _count;
+	int HashTable<K, T>::get_count() {
+		int count_ = 0;
+		for (const auto& pair : _data) {
+			if (pair._filled) {
+				count_ += count(pair._key) - 1;  
+			}
+		}
+		return count_;
 	}
 
 	template<typename K, typename T>
